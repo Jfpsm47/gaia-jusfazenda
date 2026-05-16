@@ -1,0 +1,16 @@
+geoData/
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+
+fazenda.json
+
+mapas_gerados/
+*.png
+*.kml
+
+venv/
+env/
+__pycache__/
