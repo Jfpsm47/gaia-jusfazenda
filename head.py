@@ -1,7 +1,7 @@
 import geopandas as gpd
 
 # Especifique o caminho do seu arquivo .shp
-caminho_arquivo = "geoData/unidades de conservacao/limite_ucs_federais_032026_a2.shp"
+caminho_arquivo = "caminho/para/seu_arquivo.shp"
 
 # Leia o arquivo
 gdf = gpd.read_file(caminho_arquivo)
