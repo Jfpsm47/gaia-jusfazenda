@@ -33,6 +33,17 @@ O projeto é construído em cima de bibliotecas robustas de dados espaciais no e
    ```bash
    git clone [https://github.com/Jfpsm47/gaia-jusfazenda.git](https://github.com/Jfpsm47/gaia-jusfazenda.git)
 
+## 📂 Artefatos Gerados (Saídas)
+
+Para cada análise com sobreposição confirmada (área > 0.05 ha), o sistema gera automaticamente na pasta `mapas_gerados/`:
+
+1. **Mapas de Satélite (`satelite_<Nome_da_Analise>.png`)**:
+   - Imagens em alta resolução (300 DPI) utilizando o basemap Esri World Imagery (EPSG:3857).
+   - A fazenda é destacada com uma borda amarela vazada, e a área de infração/interseção em vermelho translúcido.
+
+2. **Arquivos Google Earth (`vetor_<Nome_da_Analise>.kml`)**:
+   - O polígono da área afetada convertido para WGS 84 (EPSG:4326), pronto para visualização tridimensional e interativa no Google Earth.
+
 ## 📝 Como Executar
 
 1. Certifique-se de ter as dependências instaladas:

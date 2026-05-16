@@ -3,8 +3,11 @@ import warnings
 from datetime import datetime
 import matplotlib.pyplot as plt
 import os
+import contextily as ctx
+import fiona
 
 warnings.filterwarnings("ignore")
+fiona.drvsupport.supported_drivers['KML'] = 'rw'
 ano_atual = datetime.now().year
 
 # 1. Carregar a fazenda (Fazemos isso UMA ÚNICA VEZ)
@@ -74,17 +77,27 @@ def analisar_criterio(nome, config, fazenda):
         if area_hectares < 0.05: 
              return "CONFORME - Interseção insignificante (possível erro de borda)."
 
+        # Cria uma pasta "mapas_gerados" se não existir
+        os.makedirs("mapas_gerados", exist_ok=True)
+
         # ==========================================
         # --- NOVO: GERAÇÃO DA IMAGEM DO MAPA ---
         # ==========================================
         # Cria uma "tela" em branco com tamanho 10x8 polegadas
         fig, ax = plt.subplots(figsize=(10, 8))
         
-        # 1. Desenha o contorno da fazenda (fundo transparente, borda preta grossa)
-        fazenda.plot(ax=ax, facecolor='none', edgecolor='black', linewidth=2)
+        # Reprojeta para Web Mercator (EPSG:3857) para o basemap de satélite
+        fazenda_web = fazenda.to_crs(epsg=3857)
+        intersecao_web = intersecao.to_crs(epsg=3857)
         
-        # 2. Desenha a sobreposição (preenchimento vermelho translúcido)
-        intersecao.plot(ax=ax, facecolor='red', edgecolor='darkred', alpha=0.5)
+        # 1. Desenha a fazenda vazada com borda amarela para destacar no satélite
+        fazenda_web.plot(ax=ax, facecolor='none', edgecolor='#ffeb3b', linewidth=2.5)
+        
+        # 2. Desenha a interseção em vermelho translúcido
+        intersecao_web.plot(ax=ax, facecolor='#f44336', alpha=0.5)
+        
+        # Adiciona o basemap da Esri
+        ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, attribution="")
         
         # 3. Adiciona um título com o nome da análise
         plt.title(f"Análise: {nome} | Área Afetada: {area_hectares} ha", fontsize=14)
@@ -92,15 +105,23 @@ def analisar_criterio(nome, config, fazenda):
         # Remove os eixos (coordenadas nas bordas) para ficar mais limpo
         ax.axis('off')
         
-        # Cria uma pasta "mapas_gerados" se não existir
-        os.makedirs("mapas_gerados", exist_ok=True)
-        
-        # Salva a imagem em alta resolução (300 dpi)
-        nome_arquivo = f"mapas_gerados/mapa_{nome.replace(' ', '_')}.png"
+        # Salva a imagem em alta resolução (300 dpi) na pasta mapas_gerados
+        nome_arquivo = f"mapas_gerados/satelite_{nome.replace(' ', '_')}.png"
         plt.savefig(nome_arquivo, dpi=300, bbox_inches='tight')
         
         # Fecha a figura para liberar a memória do computador
         plt.close()
+        # ==========================================
+        
+        # ==========================================
+        # --- EXPORTAÇÃO PARA GOOGLE EARTH (KML) ---
+        # ==========================================
+        # Reprojeta a interseção para WGS 84 (EPSG:4326) exigido pelo Google Earth
+        intersecao_kml = intersecao.to_crs(epsg=4326)
+        
+        # Exporte utilizando o driver KML
+        nome_kml = f"mapas_gerados/vetor_{nome.replace(' ', '_')}.kml"
+        intersecao_kml.to_file(nome_kml, driver='KML')
         # ==========================================
 
         col_ano = config.get("coluna_ano")
